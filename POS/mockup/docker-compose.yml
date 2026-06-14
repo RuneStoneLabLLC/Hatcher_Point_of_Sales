@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hatchers-pos-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hatchers_pos_mock
+    ports:
+      - "55432:5432"
+    volumes:
+      - hatchers_pos_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hatchers_pos_mock"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  hatchers_pos_pgdata:

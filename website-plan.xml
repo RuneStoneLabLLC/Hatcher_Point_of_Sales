@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<websitePlan project="Hatcher Supply Website Rebuild" preparedFor="RuneStoneLabs LLC" date="2026-06-13">
+  <overview>
+    <currentSite>https://www.hatcherssupply.com</currentSite>
+    <goal>
+      Recreate and modernize the Hatcher Supply website for a local, mobile-friendly web experience hosted on Railway.
+    </goal>
+    <requestedPages>
+      <page>Home</page>
+      <page>About Us</page>
+      <page>Products</page>
+      <page>Contact Us</page>
+      <page>Photos</page>
+    </requestedPages>
+    <importantPreference>
+      Contact information, contact form, and map should not appear on every page. The full contact experience should live on the Contact Us page only.
+    </importantPreference>
+  </overview>
+
+  <scrapedSiteSummary>
+    <businessIdentity>
+      <name>Hatcher Supply</name>
+      <tagline>Your One-Stop Shop for Farm, Lawn, Pet and Garden Needs</tagline>
+      <location>140 Thanksgiving Lane, Huntingtown, Maryland 20639</location>
+      <phone>410-257-1660</phone>
+      <email>darryl@hatchersupply.comcastbiz.net</email>
+      <established>1992</established>
+      <positioning>
+        Family-owned and operated local supply store serving farmers, homeowners, landscapers, pet owners, and gardeners in the Huntingtown and Calvert County area.
+      </positioning>
+    </businessIdentity>
+    <coreMessages>
+      <message>Family owned and operated for over 30 years.</message>
+      <message>Three-generation legacy with deep local community roots.</message>
+      <message>Wide range of farm, lawn, garden, feed, pet, bird seed, and home essentials.</message>
+      <message>Staff provides product knowledge and loads purchases into customer vehicles.</message>
+      <message>Bulk delivery is available for mulch, topsoil, and Leafgro by calling to schedule.</message>
+    </coreMessages>
+    <currentProductAreas>
+      <area>Bulk Products</area>
+      <area>Landscaping</area>
+      <area>Bird Seed</area>
+      <area>Pet</area>
+      <area>Home Essentials</area>
+      <area>Feed</area>
+    </currentProductAreas>
+    <currentSiteIssues>
+      <issue>Contact information and contact form are repeated across many pages.</issue>
+      <issue>Navigation includes a typo: Bulk Pruducts should be Bulk Products.</issue>
+      <issue>Product content is split into several small pages that could be easier to scan if consolidated.</issue>
+      <issue>Some imagery appears to be screenshots or lower-polish assets that may feel dated.</issue>
+      <issue>The site should better prioritize mobile calls to action such as call, directions, and product browsing.</issue>
+    </currentSiteIssues>
+  </scrapedSiteSummary>
+
+  <recommendedInformationArchitecture>
+    <page id="home" title="Home">
+      <purpose>
+        Introduce Hatcher Supply quickly, establish local trust, and route visitors to products, phone, or directions.
+      </purpose>
+      <sections>
+        <section>
+          <name>Hero</name>
+          <content>
+            Use the Hatcher Supply name as the first-viewport signal with a concise local positioning line such as "Farm, lawn, garden, pet, and feed supplies in Huntingtown, Maryland."
+          </content>
+          <callsToAction>
+            <cta>View Products</cta>
+            <cta>Call Now</cta>
+            <cta>Get Directions</cta>
+          </callsToAction>
+        </section>
+        <section>
+          <name>Trust Snapshot</name>
+          <content>
+            Highlight family owned, serving the local community since 1992, and helpful in-store service.
+          </content>
+        </section>
+        <section>
+          <name>Featured Product Categories</name>
+          <content>
+            Show concise category cards for Bulk Products, Landscaping, Feed, Pet Supplies, Bird Seed, and Home Essentials.
+          </content>
+        </section>
+        <section>
+          <name>Bulk Delivery Callout</name>
+          <content>
+            Mention that delivery is available for mulch, topsoil, and Leafgro and encourage visitors to call to schedule.
+          </content>
+        </section>
+        <section>
+          <name>Photo Preview</name>
+          <content>
+            Include a small preview of store or product photos linking to the Photos page.
+          </content>
+        </section>
+      </sections>
+      <avoid>
+        <item>Do not place a full contact form on the Home page.</item>
+        <item>Do not embed a map on the Home page.</item>
+      </avoid>
+    </page>
+
+    <page id="about" title="About Us">
+      <purpose>
+        Tell the family-owned local story and explain why customers trust Hatcher Supply.
+      </purpose>
+      <sections>
+        <section>
+          <name>Mission</name>
+          <content>
+            Present Hatcher Supply as a leading farm, lawn, and garden supplier in Huntingtown, Maryland.
+          </content>
+        </section>
+        <section>
+          <name>Since 1992</name>
+          <content>
+            Describe the company history, family ownership, and commitment to the local community.
+          </content>
+        </section>
+        <section>
+          <name>Customer Service</name>
+          <content>
+            Emphasize expert knowledge, helpful staff, and loading purchases into customer vehicles.
+          </content>
+        </section>
+        <section>
+          <name>Local Community</name>
+          <content>
+            Use warm copy and authentic photos to make the store feel approachable and rooted in Southern Maryland.
+          </content>
+        </section>
+      </sections>
+    </page>
+
+    <page id="products" title="Products">
+      <purpose>
+        Give customers a clear, scannable view of what Hatcher Supply carries without forcing them through many small pages.
+      </purpose>
+      <recommendedApproach>
+        Use one consolidated Products page with category sections and anchor links instead of separate product dropdown pages, unless the inventory expands significantly later.
+      </recommendedApproach>
+      <categories>
+        <category id="bulk-products" title="Bulk Products">
+          <items>
+            <item>Mulch: natural brown, dyed black, brown, and red</item>
+            <item>Double-screened topsoil</item>
+            <item>Leafgro organic leaf compost</item>
+            <item>1-3 inch river rock</item>
+            <item>Pickup loading into truck beds or trailers</item>
+            <item>Delivery for mulch, topsoil, and Leafgro by scheduling</item>
+          </items>
+        </category>
+        <category id="landscaping" title="Landscaping">
+          <items>
+            <item>Grass seed, including Hatcher's Mix, Kentucky 31, contractor mix, and Vitality Tri-Fescue</item>
+            <item>Bagged stone, including river rock, pond stone, marble rock, mini marble chips, pea gravel, and autumn red stone</item>
+            <item>Fertilizer and lime in 50 pound bags</item>
+            <item>LeafGro and straw for gardens and new grass seed</item>
+            <item>Bagged mulch, including hardwood, cedar, pine, and cypress</item>
+            <item>Weed control products</item>
+            <item>Erosion control products, including Curlex, silt fence, Smart Fence, staples, posts, woven cloth, and non-woven filter cloth</item>
+          </items>
+        </category>
+        <category id="feed" title="Feed">
+          <items>
+            <item>Horse feed from brands such as Purina, Triple Crown, and Triumph</item>
+            <item>Hay stocked year-round</item>
+            <item>Straw for bedding</item>
+            <item>Supplements, salt licks, grooming supplies, and feeding supplies</item>
+            <item>Livestock feed</item>
+            <item>Sawdust, pine shavings, and pelleted bedding</item>
+            <item>Chicken food</item>
+            <item>Baby chicks available in spring</item>
+            <item>Corn for deer</item>
+          </items>
+        </category>
+        <category id="pet" title="Pet Supplies">
+          <items>
+            <item>Dog food</item>
+            <item>Cat food</item>
+            <item>Koi fish food</item>
+            <item>Pet treats</item>
+            <item>Special-order support when customers cannot find a specific item on the shelf</item>
+          </items>
+        </category>
+        <category id="bird-seed" title="Bird Seed">
+          <items>
+            <item>Small and large bags of bird seed</item>
+            <item>In-the-shell peanuts</item>
+            <item>Suet sold individually or by the case</item>
+          </items>
+        </category>
+        <category id="home-essentials" title="Home Essentials">
+          <items>
+            <item>Water softener salt</item>
+            <item>Wood pellets for winter heating</item>
+            <item>Propane refills</item>
+          </items>
+        </category>
+      </categories>
+      <contentGuidance>
+        Use "Call for availability" where inventory changes seasonally or by supplier. Keep descriptions practical and easy to skim.
+      </contentGuidance>
+    </page>
+
+    <page id="contact" title="Contact Us">
+      <purpose>
+        Centralize all contact information, map, directions, social links, and customer inquiry form.
+      </purpose>
+      <sections>
+        <section>
+          <name>Contact Details</name>
+          <content>
+            Include address, phone, email, social links, and business hours if available.
+          </content>
+        </section>
+        <section>
+          <name>Map</name>
+          <content>
+            Embed a Google Map for 140 Thanksgiving Lane, Huntingtown, Maryland 20639.
+          </content>
+        </section>
+        <section>
+          <name>Contact Form</name>
+          <fields>
+            <field>Name</field>
+            <field>Email</field>
+            <field>Phone</field>
+            <field>Topic</field>
+            <field>Message</field>
+          </fields>
+        </section>
+        <section>
+          <name>Delivery Note</name>
+          <content>
+            Add a clear note that customers should call to schedule bulk product delivery.
+          </content>
+        </section>
+      </sections>
+    </page>
+
+    <page id="photos" title="Photos">
+      <purpose>
+        Show real store, product, bulk material, feed, farm, and community imagery in a modern gallery.
+      </purpose>
+      <galleryCategories>
+        <category>Store</category>
+        <category>Products</category>
+        <category>Bulk Materials</category>
+        <category>Feed and Farm</category>
+        <category>Local Community</category>
+      </galleryCategories>
+      <recommendations>
+        <item>Use current photos where quality is strong.</item>
+        <item>Create new images where existing screenshots or low-resolution assets feel dated.</item>
+        <item>Add descriptive alt text for accessibility and local SEO.</item>
+      </recommendations>
+    </page>
+  </recommendedInformationArchitecture>
+
+  <designDirection>
+    <brandFeel>
+      Modern local supply store: practical, trustworthy, warm, and rooted in the community.
+    </brandFeel>
+    <visualStyle>
+      <item>Use authentic store and product photography as the primary visual layer.</item>
+      <item>Use warm neutral backgrounds, clean white content areas, deep green accents, muted barn red accents, and charcoal text.</item>
+      <item>Keep product category cards clean and utilitarian.</item>
+      <item>Avoid a glossy corporate look or generic stock-photo feel.</item>
+    </visualStyle>
+    <navigation>
+      <item>Home</item>
+      <item>About Us</item>
+      <item>Products</item>
+      <item>Photos</item>
+      <item>Contact Us</item>
+    </navigation>
+    <mobileExperience>
+      <item>Use a responsive sticky header.</item>
+      <item>Include easy Call and Directions actions, especially on mobile.</item>
+      <item>Keep product categories scannable and thumb-friendly.</item>
+    </mobileExperience>
+    <footer>
+      <recommendation>
+        Use a compact footer with the business name, quick links, copyright, and simple call or directions links. Do not repeat the full contact form or map.
+      </recommendation>
+    </footer>
+  </designDirection>
+
+  <technicalPlan>
+    <hosting>
+      <provider>Railway</provider>
+      <deploymentModel>Connect a GitHub repository to Railway for automatic deploys.</deploymentModel>
+    </hosting>
+    <recommendedStack>
+      <primaryRecommendation>
+        Astro is the best fit if the site is mostly static marketing content because it will be fast, simple, and cost-effective.
+      </primaryRecommendation>
+      <alternative>
+        Next.js is a good option if the site will later need heavier dynamic behavior, a CMS, or more app-style features.
+      </alternative>
+    </recommendedStack>
+    <features>
+      <feature>Responsive static pages</feature>
+      <feature>Optimized images</feature>
+      <feature>Contact form endpoint or third-party form service</feature>
+      <feature>Google Map embed on Contact Us only</feature>
+      <feature>Local business schema markup</feature>
+      <feature>Open Graph metadata</feature>
+      <feature>Sitemap and robots.txt</feature>
+    </features>
+  </technicalPlan>
+
+  <seoPlan>
+    <localKeywords>
+      <keyword>Hatcher Supply</keyword>
+      <keyword>Huntingtown farm supply</keyword>
+      <keyword>Calvert County feed store</keyword>
+      <keyword>Southern Maryland lawn and garden supplies</keyword>
+      <keyword>bulk mulch Huntingtown MD</keyword>
+      <keyword>topsoil delivery Huntingtown MD</keyword>
+      <keyword>pet supplies Huntingtown MD</keyword>
+      <keyword>bird seed Huntingtown MD</keyword>
+    </localKeywords>
+    <structuredData>
+      <item>LocalBusiness schema</item>
+      <item>Store address</item>
+      <item>Phone number</item>
+      <item>Business hours when confirmed</item>
+      <item>Service area including Huntingtown, Calvert County, and Southern Maryland</item>
+    </structuredData>
+  </seoPlan>
+
+  <assetPlan>
+    <existingAssets>
+      <item>Reuse current site photos where resolution and quality are acceptable.</item>
+      <item>Replace screenshot-style images with cleaner product or store photography.</item>
+    </existingAssets>
+    <newAssets>
+      <item>Create or photograph updated hero image showing the storefront, product aisles, bulk yard, or local supply-store feel.</item>
+      <item>Create category images for bulk products, landscaping, feed, pet supplies, bird seed, and home essentials.</item>
+      <item>Create an Open Graph preview image for link sharing.</item>
+    </newAssets>
+  </assetPlan>
+
+  <implementationSequence>
+    <step number="1">Confirm final contact details, business hours, social links, and whether the current email should remain public.</step>
+    <step number="2">Collect or generate final visual assets.</step>
+    <step number="3">Create the Astro or Next.js project structure.</step>
+    <step number="4">Build shared layout, navigation, footer, typography, color system, and responsive styles.</step>
+    <step number="5">Implement Home, About Us, Products, Photos, and Contact Us pages.</step>
+    <step number="6">Add contact form handling and Google Map embed on Contact Us only.</step>
+    <step number="7">Add SEO metadata, local business schema, sitemap, and robots.txt.</step>
+    <step number="8">Optimize images and verify mobile layouts.</step>
+    <step number="9">Deploy to Railway and test production URLs, form submission, map, call links, and directions links.</step>
+  </implementationSequence>
+
+  <sourceReferences>
+    <source label="Home">https://www.hatcherssupply.com/</source>
+    <source label="About Us">https://www.hatcherssupply.com/about-us</source>
+    <source label="Products">https://www.hatcherssupply.com/products</source>
+    <source label="Bulk Products">https://www.hatcherssupply.com/bulk-pruducts</source>
+    <source label="Landscaping">https://www.hatcherssupply.com/landscaping</source>
+    <source label="Bird Seed">https://www.hatcherssupply.com/bird-seed</source>
+    <source label="Pet">https://www.hatcherssupply.com/pet</source>
+    <source label="Feed">https://www.hatcherssupply.com/feed</source>
+    <source label="Photos">https://www.hatcherssupply.com/photos</source>
+  </sourceReferences>
+</websitePlan>

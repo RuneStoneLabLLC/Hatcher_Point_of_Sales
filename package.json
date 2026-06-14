@@ -1,0 +1,22 @@
+{
+  "name": "rsl-hatchers-supply",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "pos:dev": "node POS/mockup/server.mjs",
+    "pos:start": "node POS/mockup/server.mjs",
+    "pos:seed": "node POS/mockup/scripts/seed.mjs",
+    "pos:db:up": "docker-compose -f POS/mockup/docker-compose.yml up -d",
+    "pos:db:down": "docker-compose -f POS/mockup/docker-compose.yml down",
+    "audit": "npm audit --omit=dev"
+  },
+  "dependencies": {
+    "pg": "^8.21.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

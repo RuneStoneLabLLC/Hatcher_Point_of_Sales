@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A practical blueprint for building a small-store point of sale system with checkout, inventory, cash management, reporting, payments, and gift cards." />
+    <meta name="theme-color" content="#254f3c" />
+    <title>Small-Store POS Blueprint</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      .blueprint-hero {
+        background: linear-gradient(135deg, #254f3c 0%, #17211c 100%);
+        color: #fff;
+        padding: clamp(4rem, 8vw, 7rem) 0;
+      }
+
+      .blueprint-hero p {
+        max-width: 760px;
+        margin: 1rem 0 0;
+        color: #e8efe7;
+        font-size: 1.14rem;
+      }
+
+      .blueprint-shell {
+        width: min(1080px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .blueprint-layout {
+        display: grid;
+        grid-template-columns: minmax(220px, 0.32fr) minmax(0, 1fr);
+        gap: clamp(1.5rem, 4vw, 3rem);
+        align-items: start;
+      }
+
+      .blueprint-toc {
+        position: sticky;
+        top: 96px;
+        display: grid;
+        gap: 0.35rem;
+        padding: 1rem;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+      }
+
+      .blueprint-toc strong {
+        color: var(--green);
+      }
+
+      .blueprint-toc a {
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+        border-radius: 4px;
+        padding: 0.35rem 0.5rem;
+        color: var(--muted);
+        font-weight: 750;
+        text-decoration: none;
+      }
+
+      .blueprint-toc a:hover,
+      .blueprint-toc a:focus {
+        background: #edf3ed;
+        color: var(--green);
+      }
+
+      .blueprint-main {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .blueprint-card {
+        scroll-margin-top: 96px;
+        padding: clamp(1.2rem, 3vw, 2rem);
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+      }
+
+      .blueprint-card h2 {
+        font-size: clamp(1.7rem, 3vw, 2.35rem);
+      }
+
+      .blueprint-card h3 {
+        margin-top: 1.4rem;
+        font-size: 1.18rem;
+      }
+
+      .blueprint-card p {
+        color: var(--muted);
+      }
+
+      .blueprint-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.8rem;
+        margin-top: 1rem;
+      }
+
+      .blueprint-mini {
+        padding: 1rem;
+        background: #f8f5ed;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .blueprint-mini strong {
+        display: block;
+        color: var(--green);
+      }
+
+      .blueprint-list {
+        margin: 1rem 0 0;
+        padding: 0;
+        list-style: none;
+        columns: 2;
+        column-gap: 2rem;
+      }
+
+      .blueprint-list li {
+        position: relative;
+        break-inside: avoid;
+        margin: 0 0 0.65rem;
+        padding-left: 1.1rem;
+        color: var(--muted);
+      }
+
+      .blueprint-list li::before {
+        content: "";
+        position: absolute;
+        top: 0.7rem;
+        left: 0;
+        width: 6px;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: var(--red);
+      }
+
+      .blueprint-callout {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #edf3ed;
+        border-left: 5px solid var(--green);
+        border-radius: 6px;
+      }
+
+      .blueprint-callout p {
+        margin: 0;
+        color: var(--ink);
+      }
+
+      .phase-list {
+        display: grid;
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+
+      .phase {
+        display: grid;
+        grid-template-columns: 96px minmax(0, 1fr);
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8f5ed;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .phase span {
+        color: var(--red);
+        font-weight: 900;
+      }
+
+      code {
+        border-radius: 4px;
+        padding: 0.15rem 0.3rem;
+        background: #f3efe5;
+      }
+
+      @media (max-width: 860px) {
+        .blueprint-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .blueprint-toc {
+          position: static;
+        }
+
+        .blueprint-grid,
+        .phase {
+          grid-template-columns: 1fr;
+        }
+
+        .blueprint-list {
+          columns: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <nav class="nav-shell" aria-label="Primary navigation">
+        <a class="brand" href="/"><img class="brand-logo" src="/assets/images/hatcher-supply-logo.png?v=generated-sign-2" alt="" /><span><strong>Hatcher Supply</strong><small>Internal planning</small></span></a>
+        <input class="nav-toggle" type="checkbox" id="nav-toggle" aria-label="Toggle navigation" />
+        <label class="nav-button" for="nav-toggle" aria-hidden="true"><span></span><span></span><span></span></label>
+        <div class="nav-links">
+          <a href="/">Home</a><a href="/about/">About Us</a><div class="nav-item"><a href="/products/">Products</a><div class="product-menu"><a href="/products/#bulk-products">Bulk Products</a><a href="/products/#landscaping">Landscaping</a><a href="/products/#feed">Feed</a><a href="/products/#pet-supplies">Pet Supplies</a><a href="/products/#bird-seed">Bird Seed</a><a href="/products/#home-essentials">Home Essentials</a></div></div><a href="/photos/">Photos</a><a href="/contact/">Contact Us</a>
+        </div>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="blueprint-hero">
+        <div class="blueprint-shell">
+          <p class="eyebrow">Service blueprint</p>
+          <h1>Small-Store POS System</h1>
+          <p>A practical plan for building a modern point-of-sale platform that handles retail checkout, inventory, cost control, cash management, reporting, payments, and gift cards while keeping payment risk outside the custom application.</p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="blueprint-shell blueprint-layout">
+          <aside class="blueprint-toc" aria-label="Blueprint sections">
+            <strong>Sections</strong>
+            <a href="#position">Core Position</a>
+            <a href="#architecture">Architecture</a>
+            <a href="#checkout">Retail Checkout</a>
+            <a href="#inventory">Inventory</a>
+            <a href="#cost-control">Cost Control</a>
+            <a href="#cash">Cash Management</a>
+            <a href="#analytics">Analytics</a>
+            <a href="#payments">Payments</a>
+            <a href="#gift-cards">Gift Cards</a>
+            <a href="#security">Security</a>
+            <a href="#offline">Offline Mode</a>
+            <a href="#phases">Build Phases</a>
+          </aside>
+
+          <div class="blueprint-main">
+            <article class="blueprint-card" id="position">
+              <h2>Core Position</h2>
+              <p>Build the POS around retail operations, not card processing. The system should own products, checkout, inventory, users, reports, cash drawers, gift cards, and receipts. Card payments should be handled through a certified payment provider and certified terminals.</p>
+              <div class="blueprint-callout">
+                <p><strong>Guiding rule:</strong> own the retail workflow, outsource the payment risk.</p>
+              </div>
+              <div class="blueprint-grid">
+                <div class="blueprint-mini"><strong>Build in-house</strong><p>Register app, admin dashboard, catalog, inventory, reporting, gift cards, permissions, and audit logs.</p></div>
+                <div class="blueprint-mini"><strong>Integrate</strong><p>Card terminals, gateway authorization, capture, voids, refunds, settlement, and payment tokens.</p></div>
+              </div>
+            </article>
+
+            <article class="blueprint-card" id="architecture">
+              <h2>Recommended Architecture</h2>
+              <p>Use a modern web-based architecture first. It is easier to deploy, update, support, and host on Railway while still working well on registers, tablets, and phones.</p>
+              <ul class="blueprint-list">
+                <li>Frontend: React, Vue, Svelte, or another modern web framework.</li>
+                <li>Backend: Node.js/NestJS, Laravel, Django, or .NET.</li>
+                <li>Database: PostgreSQL.</li>
+                <li>Hosting: Railway for the cloud backend and database.</li>
+                <li>Offline storage: IndexedDB in the browser.</li>
+                <li>Authentication: role-based users with MFA for admins.</li>
+                <li>Payments: Stripe Terminal, Square Terminal API, Clover, TSYS/Global Payments, or another terminal-supported provider.</li>
+                <li>Receipts: browser print first, then network receipt printers or ESC/POS integration.</li>
+                <li>Barcode scanning: USB scanner input first, camera scanning later.</li>
+              </ul>
+            </article>
+
+            <article class="blueprint-card" id="checkout">
+              <h2>Retail / POS / Checkout</h2>
+              <p>The checkout screen should be fast, simple, and hard to break. Employees should be able to scan, search, discount, tender, and print receipts with minimal steps.</p>
+              <h3>Required Features</h3>
+              <ul class="blueprint-list">
+                <li>Product search and category browsing.</li>
+                <li>Barcode scan entry.</li>
+                <li>Cart quantity changes.</li>
+                <li>Price override with manager permission.</li>
+                <li>Discounts, returns, exchanges, and suspended tickets.</li>
+                <li>Customer lookup.</li>
+                <li>Cash, card, gift card, and split tender.</li>
+                <li>Printed, emailed, or texted receipts.</li>
+              </ul>
+              <h3>Core Data Entities</h3>
+              <p><code>Sale</code>, <code>SaleLineItem</code>, <code>Payment</code>, <code>Refund</code>, <code>Discount</code>, <code>TaxLine</code>, <code>Customer</code>, <code>RegisterSession</code>, and <code>CashDrawerEvent</code>.</p>
+              <div class="blueprint-callout">
+                <p>Completed sales should be immutable. Corrections should happen through refunds, voids, or adjustment transactions.</p>
+              </div>
+            </article>
+
+            <article class="blueprint-card" id="inventory">
+              <h2>Inventory</h2>
+              <p>Inventory should be event-based. Instead of only changing a quantity field, the system should record every movement that caused the quantity to change.</p>
+              <h3>Movement Types</h3>
+              <ul class="blueprint-list">
+                <li>Sale</li>
+                <li>Return</li>
+                <li>Receive stock</li>
+                <li>Manual adjustment</li>
+                <li>Damage</li>
+                <li>Shrink</li>
+                <li>Transfer</li>
+                <li>Vendor return</li>
+              </ul>
+              <h3>Minimum Product Fields</h3>
+              <p>SKU, barcode, product name, category, vendor, cost, retail price, tax status, current quantity, reorder point, active status, and stock adjustment history.</p>
+            </article>
+
+            <article class="blueprint-card" id="cost-control">
+              <h2>Cost Control</h2>
+              <p>Cost control turns the POS from a register into a business system. Item cost needs to be captured early so margin, shrink, and inventory value are useful later.</p>
+              <ul class="blueprint-list">
+                <li>Default cost.</li>
+                <li>Last received cost.</li>
+                <li>Average cost.</li>
+                <li>Retail price.</li>
+                <li>Gross margin.</li>
+                <li>Vendor.</li>
+                <li>Reorder quantity.</li>
+                <li>Shrink and damage tracking.</li>
+              </ul>
+            </article>
+
+            <article class="blueprint-card" id="cash">
+              <h2>Cash Management</h2>
+              <p>Cash should be tied to register sessions so every drawer has a clear opening count, closing count, expected cash amount, actual cash amount, and variance.</p>
+              <div class="blueprint-grid">
+                <div class="blueprint-mini"><strong>Opening</strong><p>Manager opens the register and enters the starting cash amount.</p></div>
+                <div class="blueprint-mini"><strong>During the day</strong><p>Cash sales, refunds, paid-in, paid-out, and cash drops are tracked.</p></div>
+                <div class="blueprint-mini"><strong>Closing</strong><p>Employee enters actual cash and the system compares it against expected cash.</p></div>
+                <div class="blueprint-mini"><strong>Review</strong><p>Variance is logged and routed for manager review.</p></div>
+              </div>
+            </article>
+
+            <article class="blueprint-card" id="analytics">
+              <h2>Analytics And Reporting</h2>
+              <p>Start with reports that help the owner run the store. Add forecasting and advanced dashboards only after the core data is reliable.</p>
+              <ul class="blueprint-list">
+                <li>Daily sales.</li>
+                <li>Sales by payment type.</li>
+                <li>Sales by product and category.</li>
+                <li>Tax collected.</li>
+                <li>Refunds, discounts, and voids.</li>
+                <li>Cash drawer variance.</li>
+                <li>Inventory value.</li>
+                <li>Low stock.</li>
+                <li>Gross margin.</li>
+                <li>Top products.</li>
+                <li>Staff sales activity.</li>
+                <li>CSV exports.</li>
+              </ul>
+            </article>
+
+            <article class="blueprint-card" id="payments">
+              <h2>Payments And Gateway Options</h2>
+              <p>Create a payment provider abstraction so the POS can support one provider at launch and add others later without rewriting checkout.</p>
+              <h3>Provider Interface</h3>
+              <p><code>createPaymentIntent()</code>, <code>sendToTerminal()</code>, <code>capturePayment()</code>, <code>voidPayment()</code>, <code>refundPayment()</code>, and <code>getTransactionStatus()</code>.</p>
+              <h3>Store Only Safe Payment Metadata</h3>
+              <ul class="blueprint-list">
+                <li>Payment provider.</li>
+                <li>Provider transaction ID.</li>
+                <li>Authorization code.</li>
+                <li>Payment status.</li>
+                <li>Card brand.</li>
+                <li>Last four digits.</li>
+                <li>Entry method.</li>
+                <li>Amount and timestamp.</li>
+              </ul>
+              <div class="blueprint-callout">
+                <p>Never store full card numbers, CVV, PIN, magnetic stripe data, or raw EMV data.</p>
+              </div>
+            </article>
+
+            <article class="blueprint-card" id="gift-cards">
+              <h2>Gift Cards</h2>
+              <p>Gift cards can be an internal store-credit system, but they need strong audit controls because they behave like money inside the store.</p>
+              <ul class="blueprint-list">
+                <li>Sell gift card.</li>
+                <li>Redeem gift card.</li>
+                <li>Check balance.</li>
+                <li>Reload card.</li>
+                <li>Void unused card.</li>
+                <li>Transfer balance.</li>
+                <li>Manual adjustment with manager permission.</li>
+                <li>Full gift card transaction history.</li>
+              </ul>
+              <p>Use random card numbers or codes. Avoid simple sequential numbers. Store lookup tokens securely and keep full audit logs.</p>
+            </article>
+
+            <article class="blueprint-card" id="security">
+              <h2>Security Blueprint</h2>
+              <p>The system should assume every important action needs server-side validation, role checks, and an audit trail.</p>
+              <ul class="blueprint-list">
+                <li>HTTPS everywhere.</li>
+                <li>Strong password hashing.</li>
+                <li>MFA for owner and admin users.</li>
+                <li>Role-based permissions.</li>
+                <li>Audit logs for sensitive actions.</li>
+                <li>Device and session management.</li>
+                <li>Encrypted secrets.</li>
+                <li>Database backups.</li>
+                <li>Least-privilege database users.</li>
+                <li>No card data storage.</li>
+                <li>Regular dependency updates.</li>
+                <li>Manager approval for refunds, voids, discounts, and cash adjustments.</li>
+              </ul>
+            </article>
+
+            <article class="blueprint-card" id="offline">
+              <h2>Offline Mode</h2>
+              <p>Offline mode matters for a real store, but it should be designed conservatively.</p>
+              <ul class="blueprint-list">
+                <li>Cache the product catalog locally.</li>
+                <li>Allow cash transactions while offline.</li>
+                <li>Queue non-card sales locally.</li>
+                <li>Sync when online.</li>
+                <li>Prevent gift card redemption offline unless the balance can be verified.</li>
+                <li>Use card payment provider offline mode only if officially supported.</li>
+                <li>Clearly mark unsynced transactions.</li>
+              </ul>
+            </article>
+
+            <article class="blueprint-card" id="phases">
+              <h2>Build Phases</h2>
+              <p>Build the operational POS first, then add payment complexity after checkout and inventory are stable.</p>
+              <div class="phase-list">
+                <div class="phase"><span>Phase 1</span><div><strong>MVP Register</strong><p>Login, product catalog, barcode scanning, cart, tax, cash checkout, receipt, sales history, and register open/close.</p></div></div>
+                <div class="phase"><span>Phase 2</span><div><strong>Inventory</strong><p>Product management, categories, vendors, stock counts, inventory movements, low-stock alerts, purchase receiving, and CSV import/export.</p></div></div>
+                <div class="phase"><span>Phase 3</span><div><strong>Card Payments</strong><p>One payment provider, certified terminal flow, refunds, voids, payment reports, and safe payment metadata only.</p></div></div>
+                <div class="phase"><span>Phase 4</span><div><strong>Reporting</strong><p>Daily sales, cash drawer, inventory value, margin, sales by category/product, and exports.</p></div></div>
+                <div class="phase"><span>Phase 5</span><div><strong>Gift Cards</strong><p>Issue, redeem, reload, balance lookup, and adjustment audit trail.</p></div></div>
+                <div class="phase"><span>Phase 6</span><div><strong>Advanced Features</strong><p>Multiple locations, stock transfers, ecommerce bridge, loyalty, accounting export, and advanced analytics.</p></div></div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><div><strong>Small-Store POS Blueprint</strong><p>Internal planning page for a future point-of-sale service.</p></div><div class="footer-links"><a href="/">Website</a><a href="#position">Top</a></div></footer>
+  </body>
+</html>

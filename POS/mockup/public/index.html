@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hatcher Supply POS Mockup</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Hatcher Supply</p>
+        <h1>POS Data Mockup</h1>
+      </div>
+      <div class="status" id="db-status">Checking database...</div>
+    </header>
+
+    <main class="app-shell">
+      <nav class="tabs" aria-label="POS sections">
+        <button class="tab active" data-view="dashboard">Dashboard</button>
+        <button class="tab" data-view="new-order">New Order</button>
+        <button class="tab" data-view="products">Products</button>
+        <button class="tab" data-view="inventory">Inventory</button>
+        <button class="tab" data-view="sales">Sales</button>
+        <button class="tab" data-view="customers">Customers</button>
+        <button class="tab" data-view="house-accounts">House Accounts</button>
+        <button class="tab" data-view="loyalty">Loyalty</button>
+        <button class="tab" data-view="reports">Reports</button>
+      </nav>
+
+      <section class="toolbar">
+        <div>
+          <h2 id="view-title">Dashboard</h2>
+          <p id="view-subtitle">Live summary from the simulated PostgreSQL data set.</p>
+        </div>
+        <button class="refresh" id="refresh">Refresh</button>
+      </section>
+
+      <section id="content" class="content" aria-live="polite"></section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
