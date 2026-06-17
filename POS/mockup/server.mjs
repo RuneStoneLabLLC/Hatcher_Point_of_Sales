@@ -130,6 +130,18 @@ function yyyymmdd(date = new Date()) {
   ].join("");
 }
 
+function mockTsysTender(saleNumber, total) {
+  return {
+    tenderType: "card",
+    amount: total,
+    provider: "TSYS mock terminal",
+    providerTransactionId: `MOCK-TSYS-${saleNumber.replaceAll("-", "")}`,
+    cardBrand: "Visa",
+    cardLast4: "4242",
+    status: "approved"
+  };
+}
+
 async function dashboard() {
   const [salesToday] = await query(`
     select
@@ -216,7 +228,17 @@ const routes = {
     query(`
       select s.sale_number, s.completed_at, coalesce(c.display_name, 'Walk-in') as customer,
         s.subtotal, s.tax_total, s.total, u.display_name as cashier,
-        string_agg(t.tender_type || ': $' || t.amount::text, ', ' order by t.tender_type) as tenders
+        string_agg(
+          case
+            when t.tender_type = 'card' then
+              'card: $' || t.amount::text || ' - ' || coalesce(t.provider, 'card') ||
+              ' ' || coalesce(t.card_brand, '') ||
+              case when t.card_last4 is not null then ' ending ' || t.card_last4 else '' end ||
+              case when t.provider_transaction_id is not null then ' (' || t.provider_transaction_id || ')' else '' end
+            else t.tender_type || ': $' || t.amount::text
+          end,
+          ', ' order by t.tender_type
+        ) as tenders
       from sales s
       left join customers c on c.id = s.customer_id
       join users u on u.id = s.cashier_id
@@ -406,12 +428,23 @@ async function placeOrder(payload) {
       );
     }
 
+    const tender = mockTsysTender(sale.sale_number, total);
+
     await client.query(
       `
-        insert into tenders (sale_id, tender_type, amount, provider, provider_transaction_id, status)
-        values ($1, 'mock_order', $2, 'Hatcher POS mockup', $3, 'approved')
+        insert into tenders (sale_id, tender_type, amount, provider, provider_transaction_id, card_brand, card_last4, status)
+        values ($1, $2, $3, $4, $5, $6, $7, $8)
       `,
-      [sale.id, total, `MOCK-ORDER-${sale.sale_number}`]
+      [
+        sale.id,
+        tender.tenderType,
+        tender.amount,
+        tender.provider,
+        tender.providerTransactionId,
+        tender.cardBrand,
+        tender.cardLast4,
+        tender.status
+      ]
     );
 
     await client.query("commit");
@@ -422,6 +455,7 @@ async function placeOrder(payload) {
       total,
       taxRate: mockTaxRate,
       lineCount: saleLines.length,
+      tender,
       completedAt: sale.completed_at
     };
   } catch (error) {

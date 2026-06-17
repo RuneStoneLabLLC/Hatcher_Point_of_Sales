@@ -8,6 +8,7 @@ let currentView = "dashboard";
 let orderProducts = [];
 const orderCart = new Map();
 let currentUser = null;
+let lastTenderApproval = null;
 
 const viewMeta = {
   dashboard: ["Dashboard", "Live summary from the simulated PostgreSQL data set."],
@@ -239,6 +240,39 @@ function renderOrderMessage(message, type = "success") {
   return message ? `<div class="${type === "error" ? "error" : "success"}">${escapeHtml(message)}</div>` : "";
 }
 
+function renderTenderSummary(totals, tender) {
+  const amount = tender?.amount ?? totals.total;
+  const provider = tender?.provider || "TSYS mock terminal";
+  const brand = tender?.cardBrand || "Visa";
+  const last4 = tender?.cardLast4 || "4242";
+  const status = tender?.status || "ready";
+  const transactionId = tender?.providerTransactionId;
+
+  if (!totals.lines.length && !tender) return "";
+
+  return `
+    <div class="payment-summary">
+      <div>
+        <span>Payment</span>
+        <strong>${escapeHtml(provider)}</strong>
+      </div>
+      <div>
+        <span>Card</span>
+        <strong>${escapeHtml(brand)} ending ${escapeHtml(last4)}</strong>
+      </div>
+      <div>
+        <span>Amount</span>
+        <strong>${money(amount)}</strong>
+      </div>
+      <div>
+        <span>Status</span>
+        <strong>${escapeHtml(status === "approved" ? "Approved" : "Ready to authorize")}</strong>
+      </div>
+      ${transactionId ? `<div><span>Transaction</span><strong>${escapeHtml(transactionId)}</strong></div>` : ""}
+    </div>
+  `;
+}
+
 function renderNewOrder(message = "", messageType = "success") {
   const previousScrollTop = content.querySelector(".order-products")?.scrollTop ?? 0;
   const totals = getCartTotals();
@@ -315,6 +349,7 @@ function renderNewOrder(message = "", messageType = "success") {
           <div><span>Estimated Tax</span><strong>${money(totals.tax)}</strong></div>
           <div class="grand-total"><span>Total</span><strong>${money(totals.total)}</strong></div>
         </div>
+        ${renderTenderSummary(totals, lastTenderApproval)}
         <div class="cart-actions">
           <button class="secondary-action" data-action="clear-order" ${totals.lines.length ? "" : "disabled"}>Clear Order</button>
           <button class="primary-action" data-action="place-order" ${totals.lines.length ? "" : "disabled"}>Place Order</button>
@@ -451,10 +486,11 @@ async function placeOrder() {
   content.querySelector('[data-action="place-order"]')?.setAttribute("disabled", "");
 
   try {
-    const result = await postJson("/api/orders", { lines, tenderType: "mock_order" });
+    const result = await postJson("/api/orders", { lines, tenderType: "card" });
     orderCart.clear();
+    lastTenderApproval = result.tender;
     orderProducts = await getJson("/api/order-products");
-    renderNewOrder(`Order ${result.saleNumber} placed successfully for ${money(result.total)}.`);
+    renderNewOrder(`Order ${result.saleNumber} placed successfully for ${money(result.total)}. TSYS mock card ${result.tender.providerTransactionId} approved.`);
     loadHealth();
   } catch (error) {
     renderNewOrder(error.message, "error");
@@ -481,11 +517,13 @@ content.addEventListener("click", (event) => {
     } else {
       orderCart.delete(productId);
     }
+    lastTenderApproval = null;
     renderNewOrder();
   }
 
   if (action === "clear-order") {
     orderCart.clear();
+    lastTenderApproval = null;
     renderNewOrder();
   }
 
@@ -529,6 +567,7 @@ logoutButton.addEventListener("click", async () => {
   } finally {
     orderCart.clear();
     orderProducts = [];
+    lastTenderApproval = null;
     renderLogin();
   }
 });

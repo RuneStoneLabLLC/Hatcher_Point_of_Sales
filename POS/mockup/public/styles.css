@@ -408,6 +408,31 @@ tr:last-child td { border-bottom: 0; }
   color: var(--green);
 }
 
+.payment-summary {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem;
+  border-top: 1px solid var(--line);
+  background: #f8fbf7;
+}
+
+.payment-summary div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.payment-summary span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.payment-summary strong {
+  color: var(--green);
+  text-align: right;
+}
+
 .grand-total {
   margin-top: 0.25rem;
   padding-top: 0.75rem;
