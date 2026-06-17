@@ -1,6 +1,7 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { join, normalize, resolve } from "node:path";
 import { createServer } from "node:http";
+import { handlePosRequest } from "./POS/mockup/server.mjs";
 
 const root = resolve("site");
 const port = Number(process.env.PORT || 4321);
@@ -31,7 +32,18 @@ function safePath(urlPath) {
   return target;
 }
 
-const server = createServer((request, response) => {
+const server = createServer(async (request, response) => {
+  const url = new URL(request.url || "/", `http://${request.headers.host}`);
+  if (url.pathname === "/pos") {
+    response.writeHead(308, { Location: "/pos/" });
+    response.end();
+    return;
+  }
+  if (url.pathname === "/pos" || url.pathname.startsWith("/pos/") || url.pathname.startsWith("/api/")) {
+    await handlePosRequest(request, response, { basePath: "/pos" });
+    return;
+  }
+
   const requested = safePath(request.url || "/");
   if (!requested) {
     response.writeHead(403);

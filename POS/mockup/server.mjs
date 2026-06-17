@@ -1,7 +1,8 @@
 import http from "node:http";
+import crypto from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import pg from "pg";
 
 const { Pool } = pg;
@@ -10,6 +11,11 @@ const publicDir = path.join(__dirname, "public");
 const port = Number(process.env.POS_PORT || process.env.PORT || 4310);
 const connectionString =
   process.env.DATABASE_URL || "postgres://postgres:postgres@127.0.0.1:55432/hatchers_pos_mock";
+const adminUsername = process.env.POS_ADMIN_USERNAME || "admin";
+const adminPassword = process.env.POS_ADMIN_PASSWORD || "HatcherStore%^&0";
+const sessionTtlMs = Number(process.env.POS_SESSION_TTL_MS || 1000 * 60 * 60 * 8);
+const sessionCookieName = "hatcher_pos_session";
+const sessions = new Map();
 
 const pool = new Pool({
   connectionString,
@@ -36,6 +42,64 @@ function sendJson(res, status, payload) {
 
 function sendError(res, status, message, detail) {
   sendJson(res, status, { error: message, detail });
+}
+
+function safeEqual(actual, expected) {
+  const actualBuffer = Buffer.from(String(actual));
+  const expectedBuffer = Buffer.from(String(expected));
+  if (actualBuffer.length !== expectedBuffer.length) return false;
+  return crypto.timingSafeEqual(actualBuffer, expectedBuffer);
+}
+
+function parseCookies(req) {
+  return Object.fromEntries(
+    String(req.headers.cookie || "")
+      .split(";")
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((part) => {
+        const index = part.indexOf("=");
+        return index === -1
+          ? [decodeURIComponent(part), ""]
+          : [decodeURIComponent(part.slice(0, index)), decodeURIComponent(part.slice(index + 1))];
+      })
+  );
+}
+
+function secureCookie(req) {
+  return req.headers["x-forwarded-proto"] === "https" || process.env.NODE_ENV === "production";
+}
+
+function sessionCookie(token, req) {
+  const secure = secureCookie(req) ? "; Secure" : "";
+  return `${sessionCookieName}=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${Math.floor(sessionTtlMs / 1000)}${secure}`;
+}
+
+function clearSessionCookie(req) {
+  const secure = secureCookie(req) ? "; Secure" : "";
+  return `${sessionCookieName}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`;
+}
+
+function getSession(req) {
+  const token = parseCookies(req)[sessionCookieName];
+  if (!token) return null;
+  const session = sessions.get(token);
+  if (!session || session.expiresAt <= Date.now()) {
+    sessions.delete(token);
+    return null;
+  }
+  session.expiresAt = Date.now() + sessionTtlMs;
+  return session;
+}
+
+function sendJsonWithHeaders(res, status, payload, headers = {}) {
+  res.writeHead(status, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+    ...headers
+  });
+  res.end(JSON.stringify(payload));
 }
 
 async function query(sql, params = []) {
@@ -193,8 +257,37 @@ const routes = {
 };
 
 const postRoutes = {
-  "/api/orders": placeOrder
+  "/api/orders": placeOrder,
+  "/api/login": login,
+  "/api/logout": logout
 };
+
+async function login(payload, req, res) {
+  const username = String(payload.username || "");
+  const password = String(payload.password || "");
+  if (!safeEqual(username, adminUsername) || !safeEqual(password, adminPassword)) {
+    const error = new Error("Invalid username or password");
+    error.status = 401;
+    throw error;
+  }
+
+  const token = crypto.randomBytes(32).toString("base64url");
+  sessions.set(token, {
+    username: adminUsername,
+    expiresAt: Date.now() + sessionTtlMs
+  });
+  sendJsonWithHeaders(res, 200, { ok: true, user: { username: adminUsername } }, {
+    "Set-Cookie": sessionCookie(token, req)
+  });
+}
+
+async function logout(_payload, req, res) {
+  const token = parseCookies(req)[sessionCookieName];
+  if (token) sessions.delete(token);
+  sendJsonWithHeaders(res, 200, { ok: true }, {
+    "Set-Cookie": clearSessionCookie(req)
+  });
+}
 
 async function placeOrder(payload) {
   const lines = Array.isArray(payload.lines) ? payload.lines : [];
@@ -339,9 +432,13 @@ async function placeOrder(payload) {
   }
 }
 
-async function serveStatic(req, res) {
+async function serveStatic(req, res, basePath = "") {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  const safePath = url.pathname === "/" ? "/index.html" : url.pathname;
+  let pathname = url.pathname;
+  if (basePath && pathname.startsWith(basePath)) {
+    pathname = pathname.slice(basePath.length) || "/";
+  }
+  const safePath = pathname === "/" ? "/index.html" : pathname;
   const filePath = path.normalize(path.join(publicDir, safePath));
 
   if (!filePath.startsWith(publicDir)) {
@@ -367,28 +464,49 @@ async function serveStatic(req, res) {
   }
 }
 
-const server = http.createServer(async (req, res) => {
+export async function handlePosRequest(req, res, options = {}) {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
-    if (req.method === "GET" && routes[url.pathname]) {
-      sendJson(res, 200, await routes[url.pathname]());
+    if (req.method === "GET" && url.pathname === "/api/session") {
+      const session = getSession(req);
+      sendJson(res, 200, { authenticated: Boolean(session), user: session ? { username: session.username } : null });
       return;
     }
     if (req.method === "POST" && postRoutes[url.pathname]) {
       const payload = await readJsonBody(req);
-      sendJson(res, 201, await postRoutes[url.pathname](payload));
+      if (url.pathname === "/api/login" || url.pathname === "/api/logout") {
+        const result = await postRoutes[url.pathname](payload, req, res);
+        if (result !== undefined) sendJson(res, 200, result);
+        return;
+      }
+      if (!getSession(req)) {
+        sendError(res, 401, "Login required");
+        return;
+      }
+      sendJson(res, 201, await postRoutes[url.pathname](payload, req, res));
+      return;
+    }
+    if (req.method === "GET" && routes[url.pathname]) {
+      if (!getSession(req)) {
+        sendError(res, 401, "Login required");
+        return;
+      }
+      sendJson(res, 200, await routes[url.pathname]());
       return;
     }
     if (req.method === "GET") {
-      await serveStatic(req, res);
+      await serveStatic(req, res, options.basePath || "");
       return;
     }
     sendError(res, 405, "Method not allowed");
   } catch (error) {
     sendError(res, error.status || 500, error.status ? error.message : "Server error", error.status ? undefined : error.message);
   }
-});
+}
 
-server.listen(port, () => {
-  console.log(`Hatcher POS mockup running at http://localhost:${port}`);
-});
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const server = http.createServer(handlePosRequest);
+  server.listen(port, () => {
+    console.log(`Hatcher POS mockup running at http://localhost:${port}`);
+  });
+}

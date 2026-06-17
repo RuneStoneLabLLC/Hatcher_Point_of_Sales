@@ -25,6 +25,12 @@ postgres://postgres:postgres@127.0.0.1:55432/hatchers_pos_mock
 
 ## Local Setup
 
+Run commands from the project root:
+
+```powershell
+cd "C:\Users\danie\Desktop\RuneStoneLabs LLC\RSL-HatchersSupply\Hatcher_Point_of_Sales"
+```
+
 1. Start Docker Desktop.
 2. Start the bundled local PostgreSQL database:
 
@@ -38,16 +44,59 @@ npm run pos:db:up
 npm run pos:seed
 ```
 
-4. Start the mockup web app:
+## Start Website and POS Together
+
+Use this when you want to view the public website and access the POS from `/pos/` on the same local server. This is also the setup Railway uses.
+
+```powershell
+npm start
+```
+
+Open the public website:
+
+```text
+http://localhost:4321/
+```
+
+Open the admin POS:
+
+```text
+http://localhost:4321/pos/
+```
+
+If port `4321` is already being used, choose another port:
+
+```powershell
+$env:PORT="4322"
+npm start
+```
+
+Then open:
+
+```text
+http://localhost:4322/
+http://localhost:4322/pos/
+```
+
+## Start POS Only
+
+Use this when you only want the POS mockup server:
 
 ```powershell
 npm run pos:dev
 ```
 
-5. Open:
+Open:
 
 ```text
-http://localhost:4310
+http://localhost:4310/
+```
+
+Admin login:
+
+```text
+Username: admin
+Password: HatcherStore%^&0
 ```
 
 ## Existing Postgres
@@ -62,11 +111,17 @@ npm run pos:dev
 
 ## Quick Command Reference
 
-From the repository root:
+From the `Hatcher_Point_of_Sales` project root:
 
 ```powershell
 npm run pos:db:up
 npm run pos:seed
+npm start
+```
+
+Standalone POS only:
+
+```powershell
 npm run pos:dev
 ```
 
@@ -90,4 +145,35 @@ The Docker container uses PostgreSQL's normal internal port `5432`, but exposes 
 
 ## Railway
 
-On Railway, set `DATABASE_URL` to the PostgreSQL connection string, then run the seed script once before starting the app.
+The root project start command serves both the public website and the admin POS:
+
+```text
+npm start
+```
+
+Public website:
+
+```text
+/
+```
+
+Admin POS:
+
+```text
+/pos/
+```
+
+Set these Railway variables:
+
+```text
+DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DATABASE
+POS_ADMIN_USERNAME=admin
+POS_ADMIN_PASSWORD=HatcherStore%^&0
+NODE_ENV=production
+```
+
+Run the seed script once against the Railway PostgreSQL database before using the POS:
+
+```text
+npm run pos:seed
+```

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Hatcher Supply POS Mockup</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="app-header">
@@ -12,7 +12,10 @@
         <p class="eyebrow">Hatcher Supply</p>
         <h1>POS Data Mockup</h1>
       </div>
-      <div class="status" id="db-status">Checking database...</div>
+      <div class="header-actions">
+        <div class="status" id="db-status">Checking database...</div>
+        <button class="logout" id="logout" type="button" hidden>Log Out</button>
+      </div>
     </header>
 
     <main class="app-shell">
@@ -39,6 +42,6 @@
       <section id="content" class="content" aria-live="polite"></section>
     </main>
 
-    <script src="/app.js"></script>
+    <script src="app.js"></script>
   </body>
 </html>

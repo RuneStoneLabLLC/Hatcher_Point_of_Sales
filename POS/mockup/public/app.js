@@ -3,9 +3,11 @@ const title = document.querySelector("#view-title");
 const subtitle = document.querySelector("#view-subtitle");
 const statusNode = document.querySelector("#db-status");
 const refreshButton = document.querySelector("#refresh");
+const logoutButton = document.querySelector("#logout");
 let currentView = "dashboard";
 let orderProducts = [];
 const orderCart = new Map();
+let currentUser = null;
 
 const viewMeta = {
   dashboard: ["Dashboard", "Live summary from the simulated PostgreSQL data set."],
@@ -53,6 +55,10 @@ async function getJson(url) {
   const response = await fetch(url);
   const payload = await response.json();
   if (!response.ok) {
+    if (response.status === 401) {
+      currentUser = null;
+      renderLogin(payload.error || "Login required");
+    }
     throw new Error(payload.detail || payload.error || "Request failed");
   }
   return payload;
@@ -66,6 +72,10 @@ async function postJson(url, body) {
   });
   const payload = await response.json();
   if (!response.ok) {
+    if (response.status === 401) {
+      currentUser = null;
+      renderLogin(payload.error || "Login required");
+    }
     throw new Error(payload.error || payload.detail || "Request failed");
   }
   return payload;
@@ -107,6 +117,66 @@ function table(rows, columns) {
       </div>
     </div>
   `;
+}
+
+function setAuthenticated(user) {
+  currentUser = user;
+  document.body.classList.toggle("is-authenticated", Boolean(user));
+  document.querySelector(".tabs").hidden = !user;
+  document.querySelector(".toolbar").hidden = false;
+  refreshButton.hidden = !user;
+  logoutButton.hidden = !user;
+  statusNode.textContent = user ? `Signed in as ${user.username}` : "Admin login required";
+  statusNode.className = user ? "status ok" : "status";
+}
+
+function renderLogin(message = "") {
+  setAuthenticated(null);
+  title.textContent = "Admin Login";
+  subtitle.textContent = "Sign in to create orders and view inventory.";
+  content.innerHTML = `
+    <form class="login-panel" id="login-form">
+      <div>
+        <label for="username">Username</label>
+        <input id="username" name="username" autocomplete="username" required />
+      </div>
+      <div>
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
+      </div>
+      ${message ? `<div class="error">${escapeHtml(message)}</div>` : ""}
+      <button class="primary-action" type="submit">Log In</button>
+    </form>
+  `;
+  content.querySelector("#username")?.focus();
+}
+
+async function login(username, password) {
+  const response = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error || "Login failed");
+  }
+  setAuthenticated(payload.user);
+}
+
+async function checkSession() {
+  try {
+    const session = await getJson("/api/session");
+    if (!session.authenticated) {
+      renderLogin();
+      return false;
+    }
+    setAuthenticated(session.user);
+    return true;
+  } catch {
+    renderLogin();
+    return false;
+  }
 }
 
 function renderDashboard(data) {
@@ -329,6 +399,7 @@ function renderRows(view, rows) {
 }
 
 async function loadHealth() {
+  if (!currentUser) return;
   try {
     const data = await getJson("/api/health");
     statusNode.textContent = `Database online ${new Date(data.databaseTime).toLocaleTimeString("en-US")}`;
@@ -340,6 +411,10 @@ async function loadHealth() {
 }
 
 async function loadView(view) {
+  if (!currentUser) {
+    renderLogin();
+    return;
+  }
   currentView = view;
   const [heading, subheading] = viewMeta[view];
   title.textContent = heading;
@@ -419,6 +494,22 @@ content.addEventListener("click", (event) => {
   }
 });
 
+content.addEventListener("submit", async (event) => {
+  if (event.target.id !== "login-form") return;
+  event.preventDefault();
+  const form = new FormData(event.target);
+  const submit = event.target.querySelector("button[type='submit']");
+  submit?.setAttribute("disabled", "");
+
+  try {
+    await login(form.get("username"), form.get("password"));
+    await loadHealth();
+    await loadView(currentView);
+  } catch (error) {
+    renderLogin(error.message);
+  }
+});
+
 document.querySelectorAll(".tab").forEach((button) => {
   button.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach((tab) => tab.classList.remove("active"));
@@ -432,5 +523,19 @@ refreshButton.addEventListener("click", () => {
   loadView(currentView);
 });
 
-loadHealth();
-loadView(currentView);
+logoutButton.addEventListener("click", async () => {
+  try {
+    await postJson("/api/logout", {});
+  } finally {
+    orderCart.clear();
+    orderProducts = [];
+    renderLogin();
+  }
+});
+
+checkSession().then((authenticated) => {
+  if (authenticated) {
+    loadHealth();
+    loadView(currentView);
+  }
+});
