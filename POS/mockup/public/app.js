@@ -19,6 +19,7 @@ const viewMeta = {
   customers: ["Customers", "Customer records with price tier, tax exemption, loyalty, and account balance."],
   "house-accounts": ["House Accounts", "Charge-account balances, credit limits, available credit, and terms."],
   loyalty: ["Loyalty", "Simulated points-per-dollar loyalty accounts."],
+  payments: ["Payments", "Hatcher-side setup for the future semi-integrated TSYS terminal flow."],
   reports: ["Reports", "Daily sales rollup for reconciliation and export-style reporting."]
 };
 
@@ -30,6 +31,7 @@ const endpoints = {
   customers: "/api/customers",
   "house-accounts": "/api/house-accounts",
   loyalty: "/api/loyalty",
+  payments: "/api/payment-config",
   reports: "/api/reports/daily-sales"
 };
 
@@ -247,11 +249,17 @@ function renderTenderSummary(totals, tender) {
   const last4 = tender?.cardLast4 || "4242";
   const status = tender?.status || "ready";
   const transactionId = tender?.providerTransactionId;
+  const request = tender?.request;
+  const response = tender?.terminalResponse;
 
   if (!totals.lines.length && !tender) return "";
 
   return `
     <div class="payment-summary">
+      <div class="payment-summary-title">
+        <strong>TSYS Semi-Integrated Terminal</strong>
+        <span>${escapeHtml(response ? "Approved response" : "Ready request")}</span>
+      </div>
       <div>
         <span>Payment</span>
         <strong>${escapeHtml(provider)}</strong>
@@ -268,7 +276,50 @@ function renderTenderSummary(totals, tender) {
         <span>Status</span>
         <strong>${escapeHtml(status === "approved" ? "Approved" : "Ready to authorize")}</strong>
       </div>
+      ${request ? `<div><span>Sent to Terminal</span><strong>${escapeHtml(request.transactionType)} ${escapeHtml(request.currency)} ${escapeHtml(request.amount)}</strong></div>` : ""}
       ${transactionId ? `<div><span>Transaction</span><strong>${escapeHtml(transactionId)}</strong></div>` : ""}
+      ${response?.authCode ? `<div><span>Auth Code</span><strong>${escapeHtml(response.authCode)}</strong></div>` : ""}
+      ${response?.entryMode ? `<div><span>Entry Mode</span><strong>${escapeHtml(response.entryMode)}</strong></div>` : ""}
+      ${response?.terminalId ? `<div><span>Terminal</span><strong>${escapeHtml(response.terminalId)}</strong></div>` : ""}
+      ${response?.batchId ? `<div><span>Batch</span><strong>${escapeHtml(response.batchId)}</strong></div>` : ""}
+      <p>The POS never collects or stores full card number, CVV, PIN, track data, or raw EMV data.</p>
+    </div>
+  `;
+}
+
+function renderPayments(config) {
+  return `
+    <div class="payment-grid">
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <h3>Current Hatcher Payment Setup</h3>
+            <p class="panel-note">These are Hatcher-side placeholders until merchant services provides real values.</p>
+          </div>
+          <span class="badge">${escapeHtml(config.mode)}</span>
+        </div>
+        <div class="setup-list">
+          <div><span>Provider</span><strong>${escapeHtml(config.provider)}</strong></div>
+          <div><span>Architecture</span><strong>${escapeHtml(config.architecture)}</strong></div>
+          <div><span>Merchant ID</span><strong>${escapeHtml(config.merchantId)}</strong></div>
+          <div><span>Location ID</span><strong>${escapeHtml(config.locationId)}</strong></div>
+          <div><span>Terminal ID</span><strong>${escapeHtml(config.terminalId)}</strong></div>
+          <div><span>Register ID</span><strong>${escapeHtml(config.registerId)}</strong></div>
+          <div><span>Currency</span><strong>${escapeHtml(config.currency)}</strong></div>
+          <div><span>Partial Approval</span><strong>${config.allowPartialApproval ? "Allowed" : "Disabled"}</strong></div>
+          <div><span>Live Ready</span><strong>${config.readyForLivePayments ? "Yes" : "No"}</strong></div>
+        </div>
+      </article>
+      <article class="panel">
+        <div class="panel-head"><h3>Needed From Merchant Services</h3></div>
+        <ul class="check-list">
+          ${config.pendingFromMerchantServices.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+        </ul>
+      </article>
+      <article class="panel full-width">
+        <div class="panel-head"><h3>Card Data Policy</h3></div>
+        <p class="safe-policy">${escapeHtml(config.cardDataPolicy)}</p>
+      </article>
     </div>
   `;
 }
@@ -467,6 +518,10 @@ async function loadView(view) {
       renderNewOrder();
       return;
     }
+    if (view === "payments") {
+      content.innerHTML = renderPayments(data);
+      return;
+    }
     content.innerHTML = renderRows(view, data);
   } catch (error) {
     content.innerHTML = `<div class="error">Could not load ${heading}: ${error.message}</div>`;
@@ -490,7 +545,7 @@ async function placeOrder() {
     orderCart.clear();
     lastTenderApproval = result.tender;
     orderProducts = await getJson("/api/order-products");
-    renderNewOrder(`Order ${result.saleNumber} placed successfully for ${money(result.total)}. TSYS mock card ${result.tender.providerTransactionId} approved.`);
+    renderNewOrder(`Order ${result.saleNumber} placed successfully for ${money(result.total)}. TSYS mock card ${result.tender.terminalResponse.authCode} approved.`);
     loadHealth();
   } catch (error) {
     renderNewOrder(error.message, "error");

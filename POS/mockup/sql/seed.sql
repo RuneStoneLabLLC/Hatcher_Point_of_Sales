@@ -120,6 +120,12 @@ create table tenders (
   provider_transaction_id text,
   card_brand text,
   card_last4 text,
+  auth_code text,
+  entry_mode text,
+  terminal_id text,
+  batch_id text,
+  payment_request jsonb,
+  terminal_response jsonb,
   status text not null default 'approved'
 );
 

@@ -22,6 +22,17 @@ const pool = new Pool({
   ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: false } : undefined
 });
 const mockTaxRate = Number(process.env.MOCK_MD_TAX_RATE || 0.06);
+const paymentConfig = {
+  provider: process.env.PAYMENT_PROVIDER || "tsys_mock",
+  mode: process.env.PAYMENT_MODE || "sandbox",
+  merchantId: process.env.PAYMENT_MERCHANT_ID || "HATCHER_SUPPLY_MID_PENDING",
+  locationId: process.env.PAYMENT_LOCATION_ID || "HATCHER_HUNTINGTOWN",
+  terminalId: process.env.PAYMENT_TERMINAL_ID || "REGISTER_1_TERMINAL_PENDING",
+  registerId: process.env.PAYMENT_REGISTER_ID || "REGISTER_1",
+  currency: process.env.PAYMENT_CURRENCY || "USD",
+  allowPartialApproval: process.env.PAYMENT_ALLOW_PARTIAL_APPROVAL !== "false"
+};
+let paymentColumnsReady = false;
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
@@ -131,15 +142,91 @@ function yyyymmdd(date = new Date()) {
 }
 
 function mockTsysTender(saleNumber, total) {
+  const providerTransactionId = `TSYS-MOCK-${saleNumber}-${Date.now()}`;
+  const authCode = crypto.randomBytes(3).toString("hex").toUpperCase();
+  const batchId = `BATCH-${yyyymmdd()}`;
+  const cardBrand = "Visa";
+  const cardLast4 = "4242";
+  const request = {
+    transactionType: "sale",
+    amount: roundMoney(total).toFixed(2),
+    currency: paymentConfig.currency,
+    invoiceNumber: saleNumber,
+    referenceId: saleNumber,
+    terminalId: paymentConfig.terminalId,
+    registerId: paymentConfig.registerId,
+    allowPartialApproval: paymentConfig.allowPartialApproval
+  };
+  const terminalResponse = {
+    status: "approved",
+    transactionId: providerTransactionId,
+    authCode,
+    approvedAmount: roundMoney(total),
+    cardBrand,
+    last4: cardLast4,
+    entryMode: "chip",
+    terminalId: paymentConfig.terminalId,
+    batchId,
+    merchantId: paymentConfig.merchantId,
+    locationId: paymentConfig.locationId,
+    currency: paymentConfig.currency,
+    message: "Mock authorization only. Replace with the certified TSYS/Global Payments terminal integration."
+  };
+
   return {
     tenderType: "card",
     amount: total,
-    provider: "TSYS mock terminal",
-    providerTransactionId: `MOCK-TSYS-${saleNumber.replaceAll("-", "")}`,
-    cardBrand: "Visa",
-    cardLast4: "4242",
-    status: "approved"
+    provider: "TSYS semi-integrated mock terminal",
+    providerTransactionId,
+    authCode,
+    cardBrand,
+    cardLast4,
+    entryMode: terminalResponse.entryMode,
+    terminalId: paymentConfig.terminalId,
+    batchId,
+    status: "approved",
+    request,
+    terminalResponse
   };
+}
+
+function publicPaymentConfig() {
+  return {
+    provider: paymentConfig.provider,
+    mode: paymentConfig.mode,
+    merchantId: paymentConfig.merchantId,
+    locationId: paymentConfig.locationId,
+    terminalId: paymentConfig.terminalId,
+    registerId: paymentConfig.registerId,
+    currency: paymentConfig.currency,
+    allowPartialApproval: paymentConfig.allowPartialApproval,
+    architecture: "semi-integrated-terminal",
+    cardDataPolicy: "The POS sends amount/reference data only. It must never collect or store PAN, CVV, PIN, track data, or raw EMV data.",
+    readyForLivePayments: false,
+    pendingFromMerchantServices: [
+      "Confirmed TSYS / Global Payments integration path",
+      "Production merchant ID",
+      "Terminal model and device ID",
+      "Sandbox credentials",
+      "Production credentials",
+      "Certification scripts",
+      "Settlement/batch rules",
+      "PCI SAQ guidance"
+    ]
+  };
+}
+
+async function ensureTenderPaymentColumns(db = pool) {
+  if (paymentColumnsReady) return;
+  await db.query(`
+    alter table tenders add column if not exists auth_code text;
+    alter table tenders add column if not exists entry_mode text;
+    alter table tenders add column if not exists terminal_id text;
+    alter table tenders add column if not exists batch_id text;
+    alter table tenders add column if not exists payment_request jsonb;
+    alter table tenders add column if not exists terminal_response jsonb;
+  `);
+  paymentColumnsReady = true;
 }
 
 async function dashboard() {
@@ -184,6 +271,7 @@ const routes = {
     const [row] = await query("select now() as database_time");
     return { ok: true, databaseTime: row.database_time };
   },
+  "/api/payment-config": async () => publicPaymentConfig(),
   "/api/dashboard": dashboard,
   "/api/products": async () =>
     query(`
@@ -224,8 +312,9 @@ const routes = {
       left join house_accounts ha on ha.customer_id = c.id
       order by c.display_name
     `),
-  "/api/sales": async () =>
-    query(`
+  "/api/sales": async () => {
+    await ensureTenderPaymentColumns();
+    return query(`
       select s.sale_number, s.completed_at, coalesce(c.display_name, 'Walk-in') as customer,
         s.subtotal, s.tax_total, s.total, u.display_name as cashier,
         string_agg(
@@ -234,6 +323,7 @@ const routes = {
               'card: $' || t.amount::text || ' - ' || coalesce(t.provider, 'card') ||
               ' ' || coalesce(t.card_brand, '') ||
               case when t.card_last4 is not null then ' ending ' || t.card_last4 else '' end ||
+              case when t.auth_code is not null then ' auth ' || t.auth_code else '' end ||
               case when t.provider_transaction_id is not null then ' (' || t.provider_transaction_id || ')' else '' end
             else t.tender_type || ': $' || t.amount::text
           end,
@@ -246,7 +336,8 @@ const routes = {
       group by s.id, c.display_name, u.display_name
       order by s.completed_at desc
       limit 40
-    `),
+    `);
+  },
   "/api/house-accounts": async () =>
     query(`
       select c.customer_number, c.display_name, ha.credit_limit, ha.current_balance,
@@ -331,6 +422,7 @@ async function placeOrder(payload) {
     normalized.set(productId, (normalized.get(productId) || 0) + quantity);
   }
 
+  await ensureTenderPaymentColumns();
   const client = await pool.connect();
   try {
     await client.query("begin");
@@ -432,8 +524,11 @@ async function placeOrder(payload) {
 
     await client.query(
       `
-        insert into tenders (sale_id, tender_type, amount, provider, provider_transaction_id, card_brand, card_last4, status)
-        values ($1, $2, $3, $4, $5, $6, $7, $8)
+        insert into tenders (
+          sale_id, tender_type, amount, provider, provider_transaction_id, card_brand, card_last4,
+          auth_code, entry_mode, terminal_id, batch_id, payment_request, terminal_response, status
+        )
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       `,
       [
         sale.id,
@@ -443,6 +538,12 @@ async function placeOrder(payload) {
         tender.providerTransactionId,
         tender.cardBrand,
         tender.cardLast4,
+        tender.authCode,
+        tender.entryMode,
+        tender.terminalId,
+        tender.batchId,
+        JSON.stringify(tender.request),
+        JSON.stringify(tender.terminalResponse),
         tender.status
       ]
     );
