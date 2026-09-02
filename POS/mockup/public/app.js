@@ -19,7 +19,7 @@ const viewMeta = {
   customers: ["Customers", "Customer records with price tier, tax exemption, loyalty, and account balance."],
   "house-accounts": ["House Accounts", "Charge-account balances, credit limits, available credit, and terms."],
   loyalty: ["Loyalty", "Simulated points-per-dollar loyalty accounts."],
-  payments: ["Payments", "Hatcher-side setup for the future semi-integrated TSYS terminal flow."],
+  payments: ["Payments", "Setup for the future semi-integrated TSYS terminal flow."],
   reports: ["Reports", "Daily sales rollup for reconciliation and export-style reporting."]
 };
 
@@ -293,8 +293,8 @@ function renderPayments(config) {
       <article class="panel">
         <div class="panel-head">
           <div>
-            <h3>Current Hatcher Payment Setup</h3>
-            <p class="panel-note">These are Hatcher-side placeholders until merchant services provides real values.</p>
+            <h3>Current payment setup</h3>
+            <p class="panel-note">These are placeholders until merchant services provides real values.</p>
           </div>
           <span class="badge">${escapeHtml(config.mode)}</span>
         </div>

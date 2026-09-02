@@ -1,6 +1,6 @@
-# Hatcher Supply POS Mockup
+# Farm Supply POS demo
 
-This is a lightweight web mockup for viewing simulated Hatcher Supply POS data in PostgreSQL.
+This is a lightweight web mockup for viewing simulated farm-supply POS data in PostgreSQL. It is a demo, not a live store.
 
 ## What It Shows
 
@@ -25,11 +25,7 @@ postgres://postgres:postgres@127.0.0.1:55432/hatchers_pos_mock
 
 ## Local Setup
 
-Run commands from the project root:
-
-```powershell
-cd "C:\Users\danie\Desktop\RuneStoneLabs LLC\RSL-HatchersSupply\Hatcher_Point_of_Sales"
-```
+Run commands from the project root.
 
 1. Start Docker Desktop.
 2. Start the bundled local PostgreSQL database:
@@ -111,7 +107,7 @@ npm run pos:dev
 
 ## Quick Command Reference
 
-From the `Hatcher_Point_of_Sales` project root:
+From the project root:
 
 ```powershell
 npm run pos:db:up

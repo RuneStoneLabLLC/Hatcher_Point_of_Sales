@@ -25,8 +25,8 @@ const mockTaxRate = Number(process.env.MOCK_MD_TAX_RATE || 0.06);
 const paymentConfig = {
   provider: process.env.PAYMENT_PROVIDER || "tsys_mock",
   mode: process.env.PAYMENT_MODE || "sandbox",
-  merchantId: process.env.PAYMENT_MERCHANT_ID || "HATCHER_SUPPLY_MID_PENDING",
-  locationId: process.env.PAYMENT_LOCATION_ID || "HATCHER_HUNTINGTOWN",
+  merchantId: process.env.PAYMENT_MERCHANT_ID || "MID_PENDING",
+  locationId: process.env.PAYMENT_LOCATION_ID || "LOCATION_PENDING",
   terminalId: process.env.PAYMENT_TERMINAL_ID || "REGISTER_1_TERMINAL_PENDING",
   registerId: process.env.PAYMENT_REGISTER_ID || "REGISTER_1",
   currency: process.env.PAYMENT_CURRENCY || "USD",
@@ -642,6 +642,6 @@ export async function handlePosRequest(req, res, options = {}) {
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const server = http.createServer(handlePosRequest);
   server.listen(port, () => {
-    console.log(`Hatcher POS mockup running at http://localhost:${port}`);
+    console.log(`Farm Supply POS demo running at http://localhost:${port}`);
   });
 }

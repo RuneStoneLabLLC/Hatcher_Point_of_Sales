@@ -18,7 +18,7 @@ try {
   const sql = await readFile(sqlPath, "utf8");
   await client.connect();
   await client.query(sql);
-  console.log("Seeded Hatcher POS mock database.");
+  console.log("Seeded farm-supply POS demo database.");
 } finally {
   await client.end();
 }
